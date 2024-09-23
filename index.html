@@ -342,7 +342,7 @@
                         "Authorization": `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
+                        model: "gpt-4o",
                         messages: [{ role: "user", content: prompt }],
                         max_tokens: 10,
                         temperature: 0.0
@@ -418,8 +418,16 @@
                 detectedLanguageSpan.textContent = detectedLanguage;
                 detectedFlagSpan.textContent = languageFlags[detectedLanguage] || "";
 
-                // Check if text or languages have changed
+                // Automatically set target language based on detected language
+                const previousTargetLanguage = targetLanguageSelect.value;
+                if (detectedLanguage === 'English' && previousTargetLanguage !== 'French') {
+                    targetLanguageSelect.value = 'French';
+                } else if (detectedLanguage === 'French' && previousTargetLanguage !== 'English') {
+                    targetLanguageSelect.value = 'English';
+                }
                 const targetLanguage = targetLanguageSelect.value;
+
+                // Check if text or languages have changed
                 if (text === lastOriginalText && detectedLanguage === lastDetectedLanguage && targetLanguage === lastTargetLanguage) {
                     console.log("No changes detected, no new translation.");
                     translateButton.disabled = false;
@@ -441,9 +449,9 @@
                             "Authorization": `Bearer ${apiKey}`
                         },
                         body: JSON.stringify({
-                            model: "gpt-3.5-turbo",
+                            model: "gpt-4o",
                             messages: [{ role: "user", content: prompt }],
-                            max_tokens: 4000, // Increased to 4000 tokens
+                            max_tokens: 4000,
                             temperature: 0.7
                         })
                     });
