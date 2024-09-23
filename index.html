@@ -172,6 +172,13 @@
         .translation-item {
             margin-bottom: 1rem;
         }
+        /* Styles for empty history message */
+        .empty-history-message {
+            text-align: center;
+            color: #718096; /* Gray color */
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
         /* Styles for pagination */
         .pagination {
             margin-top: 1rem;
@@ -335,7 +342,7 @@
                         "Authorization": `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-4o",
+                        model: "gpt-3.5-turbo",
                         messages: [{ role: "user", content: prompt }],
                         max_tokens: 10,
                         temperature: 0.0
@@ -434,7 +441,7 @@
                             "Authorization": `Bearer ${apiKey}`
                         },
                         body: JSON.stringify({
-                            model: "gpt-4o",
+                            model: "gpt-3.5-turbo",
                             messages: [{ role: "user", content: prompt }],
                             max_tokens: 4000, // Increased to 4000 tokens
                             temperature: 0.7
@@ -485,7 +492,13 @@
                 targetLanguage,
                 date: new Date().toISOString()
             };
-            store.add(translation);
+            const request = store.add(translation);
+            request.onsuccess = function(event) {
+                console.log("Translation saved with id:", event.target.result);
+            };
+            request.onerror = function(event) {
+                console.error("Error saving translation:", event.target.error);
+            };
         }
 
         let currentPage = 1;
@@ -502,6 +515,16 @@
                 const translations = event.target.result;
                 const historyList = document.getElementById("historyList");
                 historyList.innerHTML = "";
+
+                if (translations.length === 0) {
+                    // No translations found
+                    historyList.innerHTML = '<p class="empty-history-message">No translations found.</p>';
+                    document.getElementById("history").classList.remove("hidden");
+                    // Hide pagination controls if any
+                    const paginationControls = document.getElementById("paginationControls");
+                    paginationControls.innerHTML = "";
+                    return;
+                }
 
                 // Sort translations by date descending
                 translations.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -586,6 +609,7 @@
             const request = store.delete(id);
 
             request.onsuccess = function(event) {
+                console.log("Translation deleted with id:", id);
                 // Adjust currentPage if necessary
                 if (currentPage > 1 && (totalItems - 1) % itemsPerPage === 0) {
                     currentPage--;
@@ -594,7 +618,7 @@
             };
 
             request.onerror = function(event) {
-                console.error("Error deleting translation:", event.target.errorCode);
+                console.error("Error deleting translation:", event.target.error);
             };
         }
 
