@@ -1,6 +1,6 @@
 # Translation with GPT-4O
 
-A web-based translation tool that utilizes OpenAI's GPT-4O model to translate text between multiple languages.
+A single page web-based translation tool that utilizes OpenAI's GPT-4O model to translate text between multiple languages.
 
 ## Features
 
