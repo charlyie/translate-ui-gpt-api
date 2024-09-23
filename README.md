@@ -73,4 +73,5 @@ Available demo on codesandbox: https://g8mx7s-5000.csb.app/
 
 ## License
 
+Code generated through GPT-4o1
 This project is open-source and available under the MIT License.
