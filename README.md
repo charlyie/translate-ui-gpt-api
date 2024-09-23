@@ -2,6 +2,10 @@
 
 A single page web-based translation tool that utilizes OpenAI's GPT-4O model to translate text between multiple languages.
 
+## Demo
+
+Available demo on codesandbox: https://g8mx7s-5000.csb.app/
+
 ## Features
 
 - **Automatic Language Detection**: Detects the language of the input text using GPT-4O.
