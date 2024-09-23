@@ -6,7 +6,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif&display=swap">
     <!-- Style for loading animation and dark mode -->
     <style>
         .spinner {
@@ -119,30 +119,30 @@
         }
         /* Adjusted button styles in dark mode */
         .dark-mode .bg-blue-500 {
-            background-color: #2b6cb0; /* Darker blue */
-            color: #ffffff; /* White text */
+            background-color: #2b6cb0;
+            color: #ffffff;
         }
         .dark-mode .bg-green-500 {
-            background-color: #2f855a; /* Darker green */
-            color: #ffffff; /* White text */
+            background-color: #2f855a;
+            color: #ffffff;
         }
         .dark-mode .bg-red-500 {
-            background-color: #c53030; /* Darker red */
-            color: #ffffff; /* White text */
+            background-color: #c53030;
+            color: #ffffff;
         }
         /* Pagination buttons in dark mode */
         .dark-mode .pagination button {
-            background-color: #2d3748; /* Dark background */
-            border-color: #4a5568; /* Dark border */
-            color: #f7fafc; /* Light text */
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #f7fafc;
         }
         .dark-mode .pagination button.disabled {
             opacity: 0.5;
         }
         .dark-mode .pagination button.active {
             font-weight: bold;
-            border-color: #63b3ed; /* Lighter blue */
-            color: #63b3ed; /* Lighter blue text */
+            border-color: #63b3ed;
+            color: #63b3ed;
         }
         .dark-mode .pagination button:hover {
             background-color: #4a5568;
@@ -175,7 +175,7 @@
         /* Styles for empty history message */
         .empty-history-message {
             text-align: center;
-            color: #718096; /* Gray color */
+            color: #718096;
             font-size: 1rem;
             margin-top: 1rem;
         }
@@ -229,6 +229,7 @@
         <div class="mb-4">
             <label for="targetLanguage" class="block mb-2">Target language:</label>
             <select id="targetLanguage" class="w-full p-2 border rounded">
+                <option value="" disabled selected>Select target language</option>
                 <option value="English">🇬🇧 English</option>
                 <option value="French">🇫🇷 French</option>
                 <option value="Spanish">🇪🇸 Spanish</option>
@@ -418,12 +419,14 @@
                 detectedLanguageSpan.textContent = detectedLanguage;
                 detectedFlagSpan.textContent = languageFlags[detectedLanguage] || "";
 
-                // Automatically set target language based on detected language
+                // Automatically set target language based on detected language if none is selected
                 const previousTargetLanguage = targetLanguageSelect.value;
-                if (detectedLanguage === 'English' && previousTargetLanguage !== 'French') {
-                    targetLanguageSelect.value = 'French';
-                } else if (detectedLanguage === 'French' && previousTargetLanguage !== 'English') {
-                    targetLanguageSelect.value = 'English';
+                if (!previousTargetLanguage) {
+                    if (detectedLanguage === 'English') {
+                        targetLanguageSelect.value = 'French';
+                    } else if (detectedLanguage === 'French') {
+                        targetLanguageSelect.value = 'English';
+                    }
                 }
                 const targetLanguage = targetLanguageSelect.value;
 
