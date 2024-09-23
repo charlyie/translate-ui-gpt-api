@@ -113,20 +113,39 @@
             color: #f7fafc;
             border-color: #4a5568;
         }
-        .dark-mode .bg-gray-100 {
-            background-color: #2d3748;
+        /* Explicitly set text color for textareas in dark mode */
+        .dark-mode textarea {
+            color: #f7fafc;
         }
-        .dark-mode .border {
-            border-color: #4a5568;
-        }
+        /* Adjusted button styles in dark mode */
         .dark-mode .bg-blue-500 {
-            background-color: #3182ce;
+            background-color: #2b6cb0; /* Darker blue */
+            color: #ffffff; /* White text */
         }
         .dark-mode .bg-green-500 {
-            background-color: #38a169;
+            background-color: #2f855a; /* Darker green */
+            color: #ffffff; /* White text */
         }
-        .dark-mode .bg-gray-500 {
-            background-color: #718096;
+        .dark-mode .bg-red-500 {
+            background-color: #c53030; /* Darker red */
+            color: #ffffff; /* White text */
+        }
+        /* Pagination buttons in dark mode */
+        .dark-mode .pagination button {
+            background-color: #2d3748; /* Dark background */
+            border-color: #4a5568; /* Dark border */
+            color: #f7fafc; /* Light text */
+        }
+        .dark-mode .pagination button.disabled {
+            opacity: 0.5;
+        }
+        .dark-mode .pagination button.active {
+            font-weight: bold;
+            border-color: #63b3ed; /* Lighter blue */
+            color: #63b3ed; /* Lighter blue text */
+        }
+        .dark-mode .pagination button:hover {
+            background-color: #4a5568;
         }
         /* Alignment correction for textareas */
         .textarea-container {
@@ -148,6 +167,33 @@
         /* Set font of h1 to Roboto Serif */
         h1 {
             font-family: 'Roboto Serif', serif;
+        }
+        /* Add margin between translations */
+        .translation-item {
+            margin-bottom: 1rem;
+        }
+        /* Styles for pagination */
+        .pagination {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            margin: 0 0.25rem;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ccc;
+            background-color: #f7fafc;
+            cursor: pointer;
+        }
+        .pagination button.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .pagination button.active {
+            font-weight: bold;
+            border-color: #3182ce;
+            color: #3182ce;
         }
     </style>
 </head>
@@ -213,6 +259,8 @@
         <div id="history" class="mt-4 hidden">
             <h2 class="text-xl mb-2">Translation History</h2>
             <ul id="historyList" class="list-disc pl-5"></ul>
+            <!-- Pagination controls -->
+            <div id="paginationControls" class="pagination"></div>
         </div>
     </div>
 
@@ -388,7 +436,7 @@
                         body: JSON.stringify({
                             model: "gpt-4o",
                             messages: [{ role: "user", content: prompt }],
-                            max_tokens: 2000,
+                            max_tokens: 4000, // Increased to 4000 tokens
                             temperature: 0.7
                         })
                     });
@@ -440,7 +488,12 @@
             store.add(translation);
         }
 
-        function showHistory() {
+        let currentPage = 1;
+        const itemsPerPage = 5;
+        let totalPages = 1;
+        let totalItems = 0;
+
+        function showHistory(page = 1) {
             const transaction = db.transaction(["translations"], "readonly");
             const store = transaction.objectStore("translations");
             const request = store.getAll();
@@ -453,14 +506,23 @@
                 // Sort translations by date descending
                 translations.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                translations.forEach(item => {
+                totalItems = translations.length;
+                totalPages = Math.ceil(totalItems / itemsPerPage);
+                currentPage = page;
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const itemsToDisplay = translations.slice(startIndex, endIndex);
+
+                itemsToDisplay.forEach(item => {
                     const listItem = document.createElement("li");
+                    listItem.classList.add("translation-item");
                     const date = new Date(item.date).toLocaleString();
                     const directionText = `${item.sourceLanguage} to ${item.targetLanguage}`;
 
                     listItem.innerHTML = `
                         <strong>${date}</strong> (${directionText})
-                        <button onclick="deleteTranslation(${item.id})" class="text-red-500 ml-2">Delete</button>
+                        <button onclick="deleteTranslation(${item.id})" class="text-red-500 ml-2 bg-red-500 text-white px-2 py-1 rounded">Delete</button>
                         <br>
                         <em>Original:</em> ${item.original}<br>
                         <em>Translation:</em> ${item.translated}
@@ -469,11 +531,53 @@
                 });
 
                 document.getElementById("history").classList.remove("hidden");
+                renderPagination();
             };
 
             request.onerror = function(event) {
                 console.error("Error retrieving history:", event.target.errorCode);
             };
+        }
+
+        function renderPagination() {
+            const paginationControls = document.getElementById("paginationControls");
+            paginationControls.innerHTML = "";
+
+            if (totalPages <= 1) {
+                // No need to render pagination if there's only one page
+                return;
+            }
+
+            // Previous button
+            const prevButton = document.createElement("button");
+            prevButton.textContent = "Previous";
+            prevButton.disabled = currentPage === 1;
+            if (currentPage === 1) {
+                prevButton.classList.add("disabled");
+            }
+            prevButton.onclick = () => showHistory(currentPage - 1);
+            paginationControls.appendChild(prevButton);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement("button");
+                pageButton.textContent = i;
+                if (i === currentPage) {
+                    pageButton.classList.add("active");
+                }
+                pageButton.onclick = () => showHistory(i);
+                paginationControls.appendChild(pageButton);
+            }
+
+            // Next button
+            const nextButton = document.createElement("button");
+            nextButton.textContent = "Next";
+            nextButton.disabled = currentPage === totalPages;
+            if (currentPage === totalPages) {
+                nextButton.classList.add("disabled");
+            }
+            nextButton.onclick = () => showHistory(currentPage + 1);
+            paginationControls.appendChild(nextButton);
         }
 
         function deleteTranslation(id) {
@@ -482,7 +586,11 @@
             const request = store.delete(id);
 
             request.onsuccess = function(event) {
-                showHistory(); // Update history after deletion
+                // Adjust currentPage if necessary
+                if (currentPage > 1 && (totalItems - 1) % itemsPerPage === 0) {
+                    currentPage--;
+                }
+                showHistory(currentPage); // Update history after deletion
             };
 
             request.onerror = function(event) {
