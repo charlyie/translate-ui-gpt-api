@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Translation with GPT-4O</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Serif&display=swap" rel="stylesheet">
+    <!-- Style for loading animation and dark mode -->
+    <style>
+        .spinner {
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Styles for flags */
+        .flag {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+        .language-detection {
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+        /* Styles for flags in select options */
+        select option {
+            background-repeat: no-repeat;
+            background-position: left center;
+            padding-left: 25px;
+        }
+        /* Theme toggle switch */
+        .theme-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+        }
+        .toggle-wrapper {
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-checkbox {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slot {
+            position: absolute;
+            cursor: pointer;
+            background-color: #ccc;
+            border-radius: 10px;
+            width: 100%;
+            height: 100%;
+            transition: background-color 0.3s;
+        }
+        .toggle-icon {
+            position: absolute;
+            top: 2px;
+            width: 16px;
+            height: 16px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 16px;
+            color: #fff;
+            transition: left 0.3s;
+        }
+        .toggle-icon.sun {
+            left: 2px;
+        }
+        .toggle-icon.moon {
+            right: 2px;
+        }
+        .toggle-button {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: #fff;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+        .toggle-checkbox:checked + .toggle-slot {
+            background-color: #4a5568;
+        }
+        .toggle-checkbox:checked + .toggle-slot .toggle-button {
+            left: 22px;
+        }
+        /* Styles for dark mode */
+        body {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        body.dark-mode {
+            background-color: #1a202c;
+            color: #f7fafc;
+        }
+        .dark-mode textarea,
+        .dark-mode input,
+        .dark-mode select {
+            background-color: #2d3748;
+            color: #f7fafc;
+            border-color: #4a5568;
+        }
+        .dark-mode .bg-gray-100 {
+            background-color: #2d3748;
+        }
+        .dark-mode .border {
+            border-color: #4a5568;
+        }
+        .dark-mode .bg-blue-500 {
+            background-color: #3182ce;
+        }
+        .dark-mode .bg-green-500 {
+            background-color: #38a169;
+        }
+        .dark-mode .bg-gray-500 {
+            background-color: #718096;
+        }
+        /* Alignment correction for textareas */
+        .textarea-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .flex-container {
+            display: flex;
+            align-items: flex-start;
+        }
+        /* Style for error messages */
+        #errorMessage {
+            margin-bottom: 1rem;
+        }
+        /* Force h2 elements to have height of 36px */
+        h2 {
+            height: 36px;
+        }
+        /* Set font of h1 to Roboto Serif */
+        h1 {
+            font-family: 'Roboto Serif', serif;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme toggle switch -->
+    <div class="theme-toggle">
+        <div class="toggle-wrapper">
+            <input type="checkbox" id="themeSwitch" class="toggle-checkbox">
+            <label for="themeSwitch" class="toggle-slot">
+                <span class="toggle-button"></span>
+                <span class="toggle-icon sun">☀️</span>
+                <span class="toggle-icon moon">🌙</span>
+            </label>
+        </div>
+    </div>
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Translation with GPT-4O</h1>
+        <div class="mb-4">
+            <label for="apiKey" class="block mb-2">OpenAI API Key:</label>
+            <input type="password" id="apiKey" placeholder="Enter your API key" class="w-full p-2 border rounded">
+            <div class="mt-2">
+                <input type="checkbox" id="saveApiKey" class="mr-2">
+                <label for="saveApiKey">Save API key in browser</label>
+            </div>
+        </div>
+        <div class="mb-4">
+            <label for="targetLanguage" class="block mb-2">Target language:</label>
+            <select id="targetLanguage" class="w-full p-2 border rounded">
+                <option value="English">🇬🇧 English</option>
+                <option value="French">🇫🇷 French</option>
+                <option value="Spanish">🇪🇸 Spanish</option>
+                <option value="German">🇩🇪 German</option>
+                <option value="Italian">🇮🇹 Italian</option>
+                <option value="Portuguese">🇵🇹 Portuguese</option>
+                <option value="Russian">🇷🇺 Russian</option>
+                <option value="Chinese">🇨🇳 Chinese</option>
+                <option value="Japanese">🇯🇵 Japanese</option>
+                <option value="Arabic">🇸🇦 Arabic</option>
+            </select>
+        </div>
+        <div class="flex-container mb-4 mt-4">
+            <div class="w-1/2 pr-2 textarea-container">
+                <div class="flex items-center mb-2">
+                    <h2 class="text-xl">Original Text</h2>
+                    <div class="language-detection hidden ml-2" id="languageDetection">
+                        <span id="detectedFlag" class="flag"></span>
+                        <span id="detectedLanguage"></span>
+                    </div>
+                </div>
+                <textarea id="originalText" class="w-full h-64 p-2 border rounded overflow-auto"></textarea>
+            </div>
+            <div class="w-1/2 pl-2 textarea-container">
+                <h2 class="text-xl mb-2">Translation</h2>
+                <textarea id="translatedText" class="w-full h-64 p-2 border rounded overflow-auto bg-gray-100" readonly></textarea>
+            </div>
+        </div>
+        <!-- Error message area -->
+        <div id="errorMessage" class="text-red-500 text-sm mt-2"></div>
+        <div class="mb-4">
+            <button id="translateButton" onclick="translateText()" class="px-4 py-2 bg-blue-500 text-white rounded">Translate</button>
+            <button onclick="showHistory()" class="px-4 py-2 bg-green-500 text-white rounded ml-2">History</button>
+        </div>
+        <div id="history" class="mt-4 hidden">
+            <h2 class="text-xl mb-2">Translation History</h2>
+            <ul id="historyList" class="list-disc pl-5"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Initialize IndexedDB
+        let db;
+        const request = indexedDB.open("translationsDB", 1);
+
+        request.onupgradeneeded = function(event) {
+            db = event.target.result;
+            const store = db.createObjectStore("translations", { keyPath: "id", autoIncrement: true });
+            store.createIndex("date", "date", { unique: false });
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            // Load API key if saved
+            loadApiKey();
+            // Load theme
+            loadTheme();
+        };
+
+        request.onerror = function(event) {
+            console.error("Error initializing IndexedDB:", event.target.errorCode);
+        };
+
+        let lastOriginalText = ""; // Variable to store last original text
+        let lastDetectedLanguage = ""; // Last detected language
+        let lastTargetLanguage = ""; // Last target language used
+
+        function loadApiKey() {
+            const savedApiKey = localStorage.getItem("openai_api_key");
+            if (savedApiKey) {
+                document.getElementById("apiKey").value = savedApiKey;
+                document.getElementById("saveApiKey").checked = true;
+            }
+        }
+
+        function saveApiKey() {
+            const apiKey = document.getElementById("apiKey").value.trim();
+            const saveKey = document.getElementById("saveApiKey").checked;
+
+            if (saveKey) {
+                localStorage.setItem("openai_api_key", apiKey);
+            } else {
+                localStorage.removeItem("openai_api_key");
+            }
+        }
+
+        const languageFlags = {
+            "Afrikaans": "🇿🇦",
+            "German": "🇩🇪",
+            "English": "🇬🇧",
+            "Arabic": "🇸🇦",
+            "Chinese": "🇨🇳",
+            "Spanish": "🇪🇸",
+            "French": "🇫🇷",
+            "Italian": "🇮🇹",
+            "Japanese": "🇯🇵",
+            "Portuguese": "🇵🇹",
+            "Russian": "🇷🇺"
+        };
+
+        async function detectLanguage(apiKey, text) {
+            const prompt = `Detect the language of the following text and respond only with the name of the language in English:\n\n${text}`;
+
+            try {
+                const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-4o",
+                        messages: [{ role: "user", content: prompt }],
+                        max_tokens: 10,
+                        temperature: 0.0
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const detectedLanguage = data.choices[0].message.content.trim();
+                    return detectedLanguage;
+                } else {
+                    console.error("Error detecting language:", data.error.message);
+                    if (data.error.message.includes("incorrect API key")) {
+                        displayError("Incorrect API key. Please check your key.");
+                    } else {
+                        displayError(`Error detecting language: ${data.error.message}`);
+                    }
+                    return null;
+                }
+            } catch (error) {
+                console.error("Error detecting language:", error);
+                displayError("An error occurred while detecting the language.");
+                return null;
+            }
+        }
+
+        function displayError(message) {
+            const errorMessage = document.getElementById("errorMessage");
+            errorMessage.textContent = message;
+            errorMessage.classList.remove("hidden");
+        }
+
+        function clearError() {
+            const errorMessage = document.getElementById("errorMessage");
+            errorMessage.textContent = "";
+            errorMessage.classList.add("hidden");
+        }
+
+        async function translateText() {
+            const translateButton = document.getElementById("translateButton");
+            translateButton.disabled = true;
+            translateButton.innerHTML = '<span class="spinner"></span>Translating...';
+
+            const apiKey = document.getElementById("apiKey").value.trim();
+            const text = document.getElementById("originalText").value.trim();
+            const targetLanguageSelect = document.getElementById("targetLanguage");
+            const languageDetectionDiv = document.getElementById("languageDetection");
+            const detectedLanguageSpan = document.getElementById("detectedLanguage");
+            const detectedFlagSpan = document.getElementById("detectedFlag");
+
+            saveApiKey(); // Save or remove API key based on user's choice
+            clearError();
+
+            if (!apiKey) {
+                displayError("Please enter your API key.");
+                translateButton.disabled = false;
+                translateButton.innerHTML = 'Translate';
+                return;
+            }
+
+            if (!text) {
+                displayError("Please enter the text to translate.");
+                translateButton.disabled = false;
+                translateButton.innerHTML = 'Translate';
+                return;
+            }
+
+            // Detect the language
+            const detectedLanguage = await detectLanguage(apiKey, text);
+            if (detectedLanguage) {
+                languageDetectionDiv.classList.remove("hidden");
+                detectedLanguageSpan.textContent = detectedLanguage;
+                detectedFlagSpan.textContent = languageFlags[detectedLanguage] || "";
+
+                // Check if text or languages have changed
+                const targetLanguage = targetLanguageSelect.value;
+                if (text === lastOriginalText && detectedLanguage === lastDetectedLanguage && targetLanguage === lastTargetLanguage) {
+                    console.log("No changes detected, no new translation.");
+                    translateButton.disabled = false;
+                    translateButton.innerHTML = 'Translate';
+                    return;
+                }
+
+                lastOriginalText = text; // Update last original text
+                lastDetectedLanguage = detectedLanguage; // Update last detected language
+                lastTargetLanguage = targetLanguage; // Update last target language
+
+                const prompt = `Translate the following text from ${detectedLanguage} to ${targetLanguage}, without adding quotation marks around the translated text:\n\n${text}`;
+
+                try {
+                    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({
+                            model: "gpt-4o",
+                            messages: [{ role: "user", content: prompt }],
+                            max_tokens: 2000,
+                            temperature: 0.7
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        let translatedText = data.choices[0].message.content.trim();
+
+                        // Remove quotation marks around the text if present
+                        if ((translatedText.startsWith('"') && translatedText.endsWith('"')) ||
+                            (translatedText.startsWith('«') && translatedText.endsWith('»'))) {
+                            translatedText = translatedText.substring(1, translatedText.length - 1).trim();
+                        }
+
+                        document.getElementById("translatedText").value = translatedText;
+                        saveTranslation(text, translatedText, detectedLanguage, targetLanguage);
+                    } else {
+                        console.error("Error during translation:", data.error.message);
+                        if (data.error.message.includes("incorrect API key")) {
+                            displayError("Incorrect API key. Please check your key.");
+                        } else {
+                            displayError(`Error during translation: ${data.error.message}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error("An error occurred during translation:", error);
+                    displayError("An error occurred during translation.");
+                } finally {
+                    translateButton.disabled = false;
+                    translateButton.innerHTML = 'Translate';
+                }
+            } else {
+                translateButton.disabled = false;
+                translateButton.innerHTML = 'Translate';
+            }
+        }
+
+        function saveTranslation(original, translated, sourceLanguage, targetLanguage) {
+            const transaction = db.transaction(["translations"], "readwrite");
+            const store = transaction.objectStore("translations");
+            const translation = {
+                original,
+                translated,
+                sourceLanguage,
+                targetLanguage,
+                date: new Date().toISOString()
+            };
+            store.add(translation);
+        }
+
+        function showHistory() {
+            const transaction = db.transaction(["translations"], "readonly");
+            const store = transaction.objectStore("translations");
+            const request = store.getAll();
+
+            request.onsuccess = function(event) {
+                const translations = event.target.result;
+                const historyList = document.getElementById("historyList");
+                historyList.innerHTML = "";
+
+                // Sort translations by date descending
+                translations.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                translations.forEach(item => {
+                    const listItem = document.createElement("li");
+                    const date = new Date(item.date).toLocaleString();
+                    const directionText = `${item.sourceLanguage} to ${item.targetLanguage}`;
+
+                    listItem.innerHTML = `
+                        <strong>${date}</strong> (${directionText})
+                        <button onclick="deleteTranslation(${item.id})" class="text-red-500 ml-2">Delete</button>
+                        <br>
+                        <em>Original:</em> ${item.original}<br>
+                        <em>Translation:</em> ${item.translated}
+                    `;
+                    historyList.appendChild(listItem);
+                });
+
+                document.getElementById("history").classList.remove("hidden");
+            };
+
+            request.onerror = function(event) {
+                console.error("Error retrieving history:", event.target.errorCode);
+            };
+        }
+
+        function deleteTranslation(id) {
+            const transaction = db.transaction(["translations"], "readwrite");
+            const store = transaction.objectStore("translations");
+            const request = store.delete(id);
+
+            request.onsuccess = function(event) {
+                showHistory(); // Update history after deletion
+            };
+
+            request.onerror = function(event) {
+                console.error("Error deleting translation:", event.target.errorCode);
+            };
+        }
+
+        // Add event listener to detect text paste
+        document.getElementById("originalText").addEventListener("paste", function(event) {
+            // Use setTimeout to wait for pasted text to be inserted
+            setTimeout(translateText, 100);
+        });
+
+        // Trigger translation on blur
+        document.getElementById("originalText").addEventListener("blur", function(event) {
+            translateText();
+        });
+
+        // Retranslate when target language changes
+        document.getElementById("targetLanguage").addEventListener("change", function(event) {
+            translateText();
+        });
+
+        // Theme management
+        const themeSwitch = document.getElementById("themeSwitch");
+
+        function loadTheme() {
+            const userPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const darkMode = localStorage.getItem("darkMode");
+
+            if (darkMode === "enabled" || (darkMode !== "disabled" && userPrefersDark)) {
+                document.body.classList.add("dark-mode");
+                themeSwitch.checked = true;
+            } else {
+                document.body.classList.remove("dark-mode");
+                themeSwitch.checked = false;
+            }
+        }
+
+        function toggleTheme() {
+            if (themeSwitch.checked) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("darkMode", "enabled");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("darkMode", "disabled");
+            }
+        }
+
+        themeSwitch.addEventListener("change", toggleTheme);
+
+        // Load theme on page load
+        window.onload = function() {
+            loadTheme();
+        };
+    </script>
+</body>
+</html>
