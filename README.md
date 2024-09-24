@@ -8,11 +8,11 @@ Available demo on codesandbox: https://g8mx7s-5000.csb.app/
 
 ## Features
 
-- **Automatic Language Detection**: Detects the language of the input text using GPT-4O.
-- **Multiple Target Languages**: Supports translation to English, French, Spanish, German, Italian, Portuguese, Russian, Chinese, Japanese, and Arabic.
-- **Dark Mode Support**: Automatically adapts to your system's theme preference and includes a toggle switch for manual control.
-- **Translation History**: Saves translations locally using IndexedDB with options to view and delete entries.
-- **API Key Management**: Option to save your OpenAI API key securely in the browser's local storage.
+- **Translation:** Translate text into multiple languages.
+- **Model Selection:** Choose from a list of GPT models, including `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-4`, and `gpt-3.5-turbo`. The model list is automatically updated to the latests available models
+- **History:** View your translation history with details such as the date, target language, and model used.
+- **Theme Toggle:** Switch between light and dark modes.
+- **Settings:** Save your OpenAI API key and preferences in the browser.
 
 ## Requirements
 
@@ -34,22 +34,27 @@ Available demo on codesandbox: https://g8mx7s-5000.csb.app/
    - Locate the "OpenAI API Key" input field.
    - Enter your API key.
    - *(Optional)* Check "Save API key in browser" to store your API key securely for future sessions.
+  
+4. **Select model**
 
-4. **Input Text for Translation**
+   - Go to the settings (top right menu)
+   - Select the model you want to use. Default is `gpt-4o`
+
+5. **Input Text for Translation**
 
    - Paste or type the text you wish to translate into the "Original Text" textarea.
    - The language will be automatically detected and displayed next to the "Original Text" label.
 
-5. **Select Target Language**
+6. **Select Target Language**
 
    - Choose your desired language from the "Target language" dropdown menu.
 
-6. **View Translation**
+7. **View Translation**
 
    - The translation occurs automatically when you paste text, change the target language, or when the "Original Text" field loses focus.
    - The translated text appears in the "Translation" textarea.
 
-7. **Manage Translation History**
+8. **Manage Translation History**
 
    - Click the "History" button to view past translations.
    - Each entry shows the date, source and target languages, original text, and translated text.
@@ -58,6 +63,18 @@ Available demo on codesandbox: https://g8mx7s-5000.csb.app/
 ## Dark Mode Toggle
 
 - The app respects your system's theme preference but allows manual toggling between light and dark modes.
+
+## Models
+
+The application allows you to select from the following GPT models:
+
+- `gpt-4o` (default)
+- `gpt-4o-mini`
+- `gpt-4-turbo`
+- `gpt-4`
+- `gpt-3.5-turbo`
+
+At first load, the app will load all the recent models available.
 
 ## Notes
 
